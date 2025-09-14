@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastrar Aluno</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-lg mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Nova Matricula</h1>
+        <div class="bg-white shadow-md rounded-lg p-8">
+            <form method="post" class="space-y-4">
+                <div>
+                    <label for="nome" class="block font-medium">Nome Completo:</label>
+                    <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2" required>
+                </div>
+                <div>
+                    <label for="cpf" class="block font-medium">CPF:</label>
+                    <input type="text" name="cpf" id="cpf" class="w-full border border-gray-300 rounded-md p-2" required>
+                </div>
+                <div>
+                    <label for="data_nascimento" class="block font-medium">Data de Nascimento:</label>
+                    <input type="date" name="data_nascimento" id="data_nascimento" class="w-full border border-gray-300 rounded-md p-2" required>
+                </div>
+                <div class="flex items-center space-x-4 pt-2">
+                     <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        Salvar
+                    </button>
+                    <a href="{{ url_for('index') }}" class="text-gray-600 hover:underline">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
