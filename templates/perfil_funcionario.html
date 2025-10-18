@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil de {{ funcionario.nome }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-8 shadow-lg rounded-lg">
+    <div class="flex flex-col md:flex-row items-center md:items-start">
+        <img src="{{ url_for('static', filename='uploads/' + funcionario.foto) }}" alt="Foto de {{ funcionario.nome }}" class="w-48 h-48 rounded-full object-cover border-4 border-gray-200 mb-6 md:mb-0 md:mr-8">
+        <div class="w-full">
+            <h1 class="text-4xl font-bold text-gray-800">{{ funcionario.nome }}</h1>
+            <p class="text-xl text-blue-600 font-semibold mb-4">{{ funcionario.cargo }}</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-6 text-gray-700">
+                <div><strong>Email:</strong> {{ funcionario.email or 'Não informado' }}</div>
+                <div><strong>Telefone:</strong> {{ funcionario.telefone or 'Não informado' }}</div>
+                <div><strong>Data de Admissão:</strong> {{ funcionario.data_admissao or 'Não informada' }}</div>
+                <div><strong>CREF:</strong> {{ funcionario.cref or 'Não aplicável' }}</div>
+                <div class="col-span-2"><strong>Endereço:</strong> {{ funcionario.endereco or 'Não informado' }}, {{ funcionario.cidade or '' }} - {{ funcionario.estado or '' }} (CEP: {{ funcionario.cep or 'N/A' }})</div>
+            </div>
+
+            <div class="mt-8 border-t pt-4 flex items-center space-x-4">
+                 <!-- BOTÃO DE EDITAR ADICIONADO -->
+                 <a href="{{ url_for('editar_funcionario', funcionario_id=funcionario.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Editar Perfil</a>
+                 <a href="{{ url_for('lista_funcionarios') }}" class="text-gray-600 hover:underline">Voltar para a lista</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

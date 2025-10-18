@@ -1,36 +1,77 @@
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Cadastrar Aluno</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-10">
-    <div class="max-w-lg mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Nova Matricula</h1>
-        <div class="bg-white shadow-md rounded-lg p-8">
-            <form method="post" class="space-y-4">
-                <div>
-                    <label for="nome" class="block font-medium">Nome Completo:</label>
-                    <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2" required>
-                </div>
-                <div>
-                    <label for="cpf" class="block font-medium">CPF:</label>
-                    <input type="text" name="cpf" id="cpf" class="w-full border border-gray-300 rounded-md p-2" required>
-                </div>
-                <div>
-                    <label for="data_nascimento" class="block font-medium">Data de Nascimento:</label>
-                    <input type="date" name="data_nascimento" id="data_nascimento" class="w-full border border-gray-300 rounded-md p-2" required>
-                </div>
-                <div class="flex items-center space-x-4 pt-2">
-                     <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                        Salvar
-                    </button>
-                    <a href="{{ url_for('index') }}" class="text-gray-600 hover:underline">Cancelar</a>
-                </div>
-            </form>
+{% block title %}{% if aluno %}Editar Perfil de Aluno{% else %}Matricular Aluno{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-white p-8 shadow-lg rounded-lg">
+    <!-- Título dinâmico -->
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">{% if aluno %}Editar Dados do Aluno{% else %}Dados do Aluno{% endif %}</h1>
+    
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Dados Pessoais</h2>
+        <div>
+            <label for="foto" class="block font-medium text-gray-700">Foto de Perfil (deixe em branco para manter a atual):</label>
+            <input type="file" name="foto" id="foto" class="w-full border border-gray-300 rounded-md p-2 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
         </div>
-    </div>
-</body>
-</html>
+        <div>
+            <label for="nome" class="block font-medium text-gray-700">Nome Completo:</label>
+            <!-- O atributo 'value' preenche o campo com o dado existente -->
+            <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ aluno.nome if aluno }}">
+        </div>
+        <div>
+            <label for="cpf" class="block font-medium text-gray-700">CPF:</label>
+            <input type="text" name="cpf" id="cpf" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ aluno.cpf if aluno }}">
+        </div>
+        <div>
+            <label for="data_nascimento" class="block font-medium text-gray-700">Data de Nascimento:</label>
+            <input type="date" name="data_nascimento" id="data_nascimento" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ aluno.data_nascimento if aluno }}">
+        </div>
+        <div>
+            <label for="telefone" class="block font-medium text-gray-700">Telefone:</label>
+            <input type="tel" name="telefone" id="telefone" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.telefone if aluno }}">
+        </div>
+        <div>
+            <label for="email" class="block font-medium text-gray-700">Email:</label>
+            <input type="email" name="email" id="email" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.email if aluno }}">
+        </div>
+        
+        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 pt-4">Endereço</h2>
+        <div>
+            <label for="endereco" class="block font-medium text-gray-700">Endereço (Rua, Nº):</label>
+            <input type="text" name="endereco" id="endereco" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.endereco if aluno }}">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="cidade" class="block font-medium text-gray-700">Cidade:</label>
+                <input type="text" name="cidade" id="cidade" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.cidade if aluno }}">
+            </div>
+            <div>
+                <label for="estado" class="block font-medium text-gray-700">Estado (UF):</label>
+                <input type="text" name="estado" id="estado" class="w-full border border-gray-300 rounded-md p-2 mt-1" maxlength="2" value="{{ aluno.estado if aluno }}">
+            </div>
+        </div>
+        <div>
+            <label for="cep" class="block font-medium text-gray-700">CEP:</label>
+            <input type="text" name="cep" id="cep" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.cep if aluno }}">
+        </div>
+
+        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 pt-4">Matrícula</h2>
+        <div>
+            <label for="data_matricula" class="block font-medium text-gray-700">Data da Matrícula:</label>
+            <input type="date" name="data_matricula" id="data_matricula" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.data_matricula if aluno }}">
+        </div>
+        <div>
+            <label for="status" class="block font-medium text-gray-700">Status:</label>
+            <select name="status" id="status" class="w-full border border-gray-300 rounded-md p-2 mt-1">
+                <option value="Ativo" {% if aluno and aluno.status == 'Ativo' %}selected{% endif %}>Ativo</option>
+                <option value="Inativo" {% if aluno and aluno.status == 'Inativo' %}selected{% endif %}>Inativo</option>
+            </select>
+        </div>
+
+        <div class="flex items-center space-x-4 pt-4">
+             <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Salvar Alterações</button>
+            <a href="{{ url_for('lista_alunos') }}" class="text-gray-600 hover:underline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

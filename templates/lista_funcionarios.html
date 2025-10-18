@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Funcionários{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Funcionários</h1>
+        <a href="{{ url_for('novo_funcionario') }}" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">
+            Novo Funcionário
+        </a>
+    </div>
+    <div class="bg-white p-6 shadow-lg rounded-lg">
+        <ul class="space-y-4">
+            {% for func in funcionarios %}
+                <li class="p-4 border rounded-md flex items-center">
+                    <img src="{{ url_for('static', filename='uploads/' + func.foto) }}" alt="Foto de {{ func.nome }}" class="w-12 h-12 rounded-full object-cover mr-4">
+                    <div class="flex-grow">
+                        <!-- NOME AGORA É UM LINK PARA O PERFIL -->
+                        <a href="{{ url_for('perfil_funcionario', funcionario_id=func.id) }}" class="hover:underline">
+                            <p class="font-semibold text-lg text-gray-700">{{ func.nome }}</p>
+                        </a>
+                        <p class="text-sm text-gray-500">Cargo: {{ func.cargo }} | Email: {{ func.email or 'N/A' }}</p>
+                    </div>
+                    <form action="{{ url_for('excluir_funcionario', funcionario_id=func.id) }}" method="post" class="ml-4" onsubmit="return confirm('Tem certeza?');">
+                        <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md text-sm">
+                            Excluir
+                        </button>
+                    </form>
+                </li>
+            {% else %}
+                <li class="text-gray-500 text-center py-4">Nenhum funcionário cadastrado.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
