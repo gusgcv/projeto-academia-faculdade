@@ -1,9 +1,11 @@
 import os
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.secret_key = 'senha_user'
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'academia.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -12,6 +14,19 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 
+
+class Usuario(db.Model):
+    __tablename__ = 'usuarios'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    senha_hash = db.Column(db.String(200), nullable=False)
+
+    def set_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+
+    def verificar_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha)
 
 class Aluno(db.Model):
     __tablename__ = 'alunos'
@@ -158,7 +173,7 @@ def editar_aluno(aluno_id):
 @app.route('/aluno/excluir/<int:aluno_id>', methods=['POST'])
 def excluir_aluno(aluno_id):
     aluno_para_excluir = Aluno.query.get_or_404(aluno_id)
-    if aluno_para_exluir.foto != 'default.png':
+    if aluno_para_excluir.foto != 'default.png':
         try:
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], aluno.foto))
         except OSError:
@@ -234,7 +249,7 @@ def editar_funcionario(funcionario_id):
 @app.route('/funcionario/excluir/<int:funcionario_id>', methods=['POST'])
 def excluir_funcionario(funcionario_id):
     funcionario_para_excluir = Funcionario.query.get_or_404(funcionario_id)
-    if funcionario_para_exluir.foto != 'default.png':
+    if funcionario_para_excluir.foto != 'default.png':
         try:
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], funcionario_para_excluir.foto))
         except OSError:
@@ -334,6 +349,66 @@ def excluir_item_treino(item_id):
     db.session.delete(item)
     db.session.commit()
     return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        confirmar = request.form.get('confirmar')
+
+        if senha != confirmar:
+            flash('As senhas não coincidem.', 'danger')
+            return redirect(url_for('register'))
+
+        usuario_existente = Usuario.query.filter_by(email=email).first()
+        if usuario_existente:
+            flash('E-mail já cadastrado. Tente outro.', 'warning')
+            return redirect(url_for('register'))
+        
+        senha_hash = generate_password_hash(senha)
+        # ✅ Campo corrigido aqui
+        novo_usuario = Usuario(nome=nome, email=email, senha_hash=senha_hash)
+
+        db.session.add(novo_usuario)
+        db.session.commit()
+
+        flash('Cadastro realizado com sucesso! Faça login.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        senha = request.form['senha']
+
+        usuario = Usuario.query.filter_by(email=email).first()
+
+        if usuario and usuario.verificar_senha(senha):
+            session['usuario_id'] = usuario.id
+            session['usuario_nome'] = usuario.nome
+            flash(f'Bem-vindo, {usuario.nome}!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('E-mail ou senha incorretos.', 'danger')
+            return redirect(url_for('login'))
+    return render_template('login.html')
+
+@app.route('/dashboard')
+def dashboard():
+    if 'usuario_id' not in session:
+        flash('Você precisa fazer login primeiro.', 'warning')
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', nome=session['usuario_nome'])
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Logout realizado com sucesso.', 'info')
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     with app.app_context():

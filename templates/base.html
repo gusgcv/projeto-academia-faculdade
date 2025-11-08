@@ -12,12 +12,20 @@
                 <div class="flex items-center">
                     <a href="{{ url_for('index') }}" class="font-bold text-xl">AcademiaSys</a>
                 </div>
+
                 <div class="flex items-center space-x-4">
-                    <a href="{{ url_for('index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Dashboard</a>
-                    <a href="{{ url_for('lista_alunos') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Alunos</a>
-                    <a href="{{ url_for('lista_funcionarios') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Funcionários</a>
-                    <!-- NOVO LINK PARA O BANCO DE EXERCÍCIOS -->
-                    <a href="{{ url_for('lista_exercicios') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Exercícios</a>
+                    {% if session.get('usuario_id') %}
+                        <!-- Mostra apenas se o usuário estiver logado -->
+                        <a href="{{ url_for('index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Dashboard</a>
+                        <a href="{{ url_for('lista_alunos') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Alunos</a>
+                        <a href="{{ url_for('lista_funcionarios') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Funcionários</a>
+                        <a href="{{ url_for('lista_exercicios') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Exercícios</a>
+                        <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded-md text-sm font-medium bg-red-600 hover:bg-red-700">Sair</a>
+                    {% else %}
+                        <!-- Mostra apenas se o usuário NÃO estiver logado -->
+                        <a href="{{ url_for('login') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Login</a>
+                        <a href="{{ url_for('register') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Registrar</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
