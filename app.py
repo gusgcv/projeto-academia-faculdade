@@ -29,6 +29,8 @@ class Aluno(db.Model):
     data_matricula = db.Column(db.String(10), nullable=True)
     status = db.Column(db.String(10), default= 'Ativo', nullable=False)
 
+    treinos = db.relationship('Treino', back_populates='aluno', lazy=True, cascade="all, delete-orphan")
+
 class Funcionario(db.Model):
     __tablename__ = 'funcionarios'
     id = db.Column(db.Integer, primary_key=True)
@@ -43,7 +45,41 @@ class Funcionario(db.Model):
     telefone = db.Column(db.String(20), nullable=True)
     email = db.Column(db.String(100), unique=True, nullable=True)
     data_admissao = db.Column(db.String(10), nullable=True)
+    
+    treinos = db.relationship('Treino', back_populates='funcionario', lazy=True)
 
+
+class Exercicio(db.Model):
+    __tablename__ = 'exercicios'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False, unique=True)
+    grupo_muscular = db.Column(db.String(255), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    itens_treino = db.relationship('ItemTreino', back_populates='exercicio', lazy=True)
+    
+
+class Treino(db.Model):
+    __tablename__ = 'treinos'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    aluno_id = db.Column(db.Integer, db.ForeignKey('alunos.id'), nullable=False)
+    funcionario_id = db.Column(db.Integer, db.ForeignKey('funcionarios.id'), nullable=True)
+    aluno = db.relationship('Aluno', back_populates='treinos')
+    funcionario = db.relationship('Funcionario', back_populates='treinos')
+    itens = db.relationship('ItemTreino', back_populates='treino', lazy=True, cascade="all, delete-orphan")
+
+class ItemTreino(db.Model):
+    __tablename__ = 'itens_treino'
+    id = db.Column(db.Integer, primary_key=True)
+    treino_id = db.Column(db.Integer, db.ForeignKey('treinos.id'), nullable=False)
+    exercicio_id = db.Column(db.Integer, db.ForeignKey('exercicios.id'), nullable=False)
+    series = db.Column(db.String(20), nullable=False)
+    repeticoes = db.Column(db.String(20), nullable=True)
+    descanso_seg = db.Column(db.Integer, nullable=True)
+    observacoes = db.Column(db.Text, nullable=True)
+
+    treino = db.relationship('Treino', back_populates='itens')
+    exercicio = db.relationship('Exercicio', back_populates='itens_treino')
 
 
 @app.route('/')
@@ -84,7 +120,7 @@ def novo_aluno():
             telefone=request.form.get('telefone'),
             email=request.form.get('email'),
             data_matricula=request.form.get('data_matricula'),
-            status=request.form['status'] 
+            status=request.form['status']
         )
         db.session.add(novo_aluno)
         db.session.commit()
@@ -200,12 +236,104 @@ def excluir_funcionario(funcionario_id):
     funcionario_para_excluir = Funcionario.query.get_or_404(funcionario_id)
     if funcionario_para_exluir.foto != 'default.png':
         try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], func.foto))
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], funcionario_para_excluir.foto))
         except OSError:
             pass
     db.session.delete(funcionario_para_excluir)
     db.session.commit()
     return redirect(url_for('lista_funcionarios'))
+
+@app.route('/exercicios')
+def lista_exercicios():
+    exercicios = Exercicio.query.order_by(Exercicio.grupo_muscular, Exercicio.nome).all()
+    return render_template('lista_exercicios.html', exercicios=exercicios)
+
+@app.route('/exercicio/novo', methods=['GET', 'POST'])
+def novo_exercicio():
+    if request.method == 'POST':
+        grupos_selecionados = request.form.getlist('grupo_muscular')
+        grupos_string = ",".join(grupos_selecionados)
+
+        novo_ex = Exercicio(
+            nome=request.form['nome'],
+            grupo_muscular=grupos_string,
+            descricao=request.form.get('descricao')
+        )
+        db.session.add(novo_ex)
+        db.session.commit()
+        return redirect(url_for('lista_exercicios'))
+    return render_template('form_exercicio.html', exercicio=None)
+
+@app.route('/exercicio/editar/<int:exercicio_id>', methods=['GET', 'POST'])
+def editar_exercicio(exercicio_id):
+    exercicio = Exercicio.query.get_or_404(exercicio_id)
+    if request.method == 'POST':
+        grupos_selecionados = request.form.getlist('grupo_muscular')
+        grupos_string = ",".join(grupos_selecionados)
+
+        exercicio.nome = request.form['nome']
+        exercicio.grupo_muscular = grupos_string
+        exercicio.descricao = request.form.get('descricao')
+        db.session.commit()
+        return redirect(url_for('lista_exercicios'))
+    return render_template('form_exercicio.html', exercicio=exercicio)
+
+@app.route('/exercicio/excluir/<int:exercicio_id>', methods=['POST'])
+def excluir_exercicio(exercicio_id):
+    exercicio_para_excluir = Exercicio.query.get_or_404(exercicio_id)
+    db.session.delete(exercicio_para_excluir)
+    db.session.commit()
+    return redirect(url_for('lista_exercicios'))
+
+@app.route('/aluno/<int:aluno_id>/treinos')
+def gerenciar_treinos(aluno_id):
+    aluno = Aluno.query.get_or_404(aluno_id)
+    exercicios_disponiveis = Exercicio.query.order_by(Exercicio.nome).all()
+    return render_template('gerenciar_treinos.html', aluno=aluno, exercicios_disponiveis=exercicios_disponiveis)
+
+@app.route('/aluno/<int:aluno_id>/treino/novo', methods=['POST'])
+def novo_treino(aluno_id):
+    nome_treino = request.form['nome_treino']
+    novo_treino = Treino(
+        nome=nome_treino,
+        aluno_id=aluno_id,
+        funcionario_id=None 
+    )
+    db.session.add(novo_treino)
+    db.session.commit()
+    return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
+
+@app.route('/treino/<int:treino_id>/excluir', methods=['POST'])
+def excluir_treino(treino_id):
+    treino = Treino.query.get_or_404(treino_id)
+    aluno_id = treino.aluno_id
+    db.session.delete(treino)
+    db.session.commit()
+    return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
+
+@app.route('/treino/<int:treino_id>/adicionar_item', methods=['POST'])
+def adicionar_item_treino(treino_id):
+    treino = Treino.query.get_or_404(treino_id)
+    
+    novo_item = ItemTreino(
+        treino_id=treino.id,
+        exercicio_id=request.form['exercicio_id'],
+        series=request.form.get('series'),
+        repeticoes=request.form.get('repeticoes'),
+        descanso_seg=request.form.get('descanso_seg'),
+        observacoes=request.form.get('observacoes')
+    )
+    db.session.add(novo_item)
+    db.session.commit()
+    return redirect(url_for('gerenciar_treinos', aluno_id=treino.aluno_id))
+
+@app.route('/item_treino/<int:item_id>/excluir', methods=['POST'])
+def excluir_item_treino(item_id):
+    item = ItemTreino.query.get_or_404(item_id)
+    aluno_id = item.treino.aluno_id
+    db.session.delete(item)
+    db.session.commit()
+    return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
 
 if __name__ == '__main__':
     with app.app_context():

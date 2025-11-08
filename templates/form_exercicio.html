@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if exercicio %}Editar Exercício{% else %}Novo Exercício{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-white p-8 shadow-lg rounded-lg">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">{% if exercicio %}Editar Exercício{% else %}Novo Exercício{% endif %}</h1>
+    <form method="post" class="space-y-4">
+        <div>
+            <label for="nome" class="block font-medium text-gray-700">Nome do Exercício:</label>
+            <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ exercicio.nome if exercicio }}">
+        </div>
+        
+        <!-- INÍCIO DA MUDANÇA: Substituído Select por Checkboxes -->
+        <div>
+            <label class="block font-medium text-gray-700">Grupos Musculares:</label>
+            <!-- 
+                Esta lógica define as opções de grupos e verifica quais já estão selecionados 
+                se estivermos no modo de edição.
+            -->
+            {% set grupos = ['Peito', 'Costas', 'Pernas', 'Ombros', 'Bíceps', 'Tríceps', 'Abdômen', 'Cardio', 'Outro'] %}
+            {% set grupos_selecionados = exercicio.grupo_muscular.split(',') if exercicio and exercicio.grupo_muscular else [] %}
+            
+            <div class="mt-2 grid grid-cols-3 gap-2">
+                {% for grupo in grupos %}
+                <label class="flex items-center space-x-2 p-2 border rounded-md hover:bg-gray-50">
+                    <input type="checkbox" name="grupo_muscular" value="{{ grupo }}" 
+                           class="rounded text-purple-600 focus:ring-purple-500"
+                           {% if grupo in grupos_selecionados %}checked{% endif %}>
+                    <span>{{ grupo }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- FIM DA MUDANÇA -->
+
+        <div>
+            <label for="descricao" class="block font-medium text-gray-700">Descrição/Instruções (Opcional):</label>
+            <textarea name="descricao" id="descricao" rows="4" class="w-full border border-gray-300 rounded-md p-2 mt-1">{{ exercicio.descricao if exercicio else '' }}</textarea>
+        </div>
+        <div class="flex items-center space-x-4 pt-4">
+             <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">Salvar</button>
+            <a href="{{ url_for('lista_exercicios') }}" class="text-gray-600 hover:underline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
