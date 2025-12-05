@@ -11,13 +11,8 @@
             <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ exercicio.nome if exercicio }}">
         </div>
         
-        <!-- INÍCIO DA MUDANÇA: Substituído Select por Checkboxes -->
         <div>
             <label class="block font-medium text-gray-700">Grupos Musculares:</label>
-            <!-- 
-                Esta lógica define as opções de grupos e verifica quais já estão selecionados 
-                se estivermos no modo de edição.
-            -->
             {% set grupos = ['Peito', 'Costas', 'Pernas', 'Ombros', 'Bíceps', 'Tríceps', 'Abdômen', 'Cardio', 'Outro'] %}
             {% set grupos_selecionados = exercicio.grupo_muscular.split(',') if exercicio and exercicio.grupo_muscular else [] %}
             
@@ -32,7 +27,6 @@
                 {% endfor %}
             </div>
         </div>
-        <!-- FIM DA MUDANÇA -->
 
         <div>
             <label for="descricao" class="block font-medium text-gray-700">Descrição/Instruções (Opcional):</label>

@@ -1,66 +1,89 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if funcionario %}Editar Perfil de Funcionário{% else %}Cadastrar Funcionário{% endif %}{% endblock %}
+{% block title %}{% if funcionario %}Editar Funcionário{% else %}Novo Funcionário{% endif %}{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto bg-white p-8 shadow-lg rounded-lg">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">{% if funcionario %}Editar Dados do Funcionário{% else %}Dados do Funcionário{% endif %}</h1>
-    <form method="post" enctype="multipart/form-data" class="space-y-4">
-        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Dados Pessoais e Cargo</h2>
-        <div>
-            <label for="foto" class="block font-medium text-gray-700">Foto de Perfil (deixe em branco para manter a atual):</label>
-            <input type="file" name="foto" id="foto" class="w-full border border-gray-300 rounded-md p-2 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-        </div>
-        <div>
-            <label for="nome" class="block font-medium text-gray-700">Nome Completo:</label>
-            <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ funcionario.nome if funcionario }}">
-        </div>
-        <div>
-            <label for="cargo" class="block font-medium text-gray-700">Cargo:</label>
-            <input type="text" name="cargo" id="cargo" class="w-full border border-gray-300 rounded-md p-2 mt-1" required placeholder="Ex: Professor, Recepcionista" value="{{ funcionario.cargo if funcionario }}">
-        </div>
-        <div>
-            <label for="data_admissao" class="block font-medium text-gray-700">Data de Admissão:</label>
-            <input type="date" name="data_admissao" id="data_admissao" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.data_admissao if funcionario }}">
-        </div>
-        <div>
-            <label for="cref" class="block font-medium text-gray-700">CREF (Opcional):</label>
-            <input type="text" name="cref" id="cref" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.cref if funcionario }}">
-        </div>
-        <div>
-            <label for="telefone" class="block font-medium text-gray-700">Telefone:</label>
-            <input type="tel" name="telefone" id="telefone" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.telefone if funcionario }}">
-        </div>
-        <div>
-            <label for="email" class="block font-medium text-gray-700">Email:</label>
-            <input type="email" name="email" id="email" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.email if funcionario }}">
+<div class="max-w-2xl mx-auto bg-white p-8 shadow-card rounded-2xl border border-gray-100">
+    <h1 class="text-3xl font-bold text-dark mb-8 flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        {% if funcionario %}Editar Funcionário{% else %}Novo Funcionário{% endif %}
+    </h1>
+    
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        <div class="space-y-6">
+            <h2 class="text-xl font-bold text-dark border-b pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Dados Profissionais
+            </h2>
+            <div>
+                <label for="foto" class="block font-medium text-gray-700 mb-2">Foto de Perfil</label>
+                <input type="file" name="foto" id="foto" class="w-full border border-gray-300 rounded-lg p-2 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-gray-100 file:text-dark hover:file:bg-gray-200 transition cursor-pointer">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="nome" class="block font-medium text-gray-700 mb-2">Nome Completo <span class="text-red-500">*</span></label>
+                    <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" required value="{{ funcionario.nome if funcionario }}">
+                </div>
+                <div>
+                    <label for="cargo" class="block font-medium text-gray-700 mb-2">Cargo <span class="text-red-500">*</span></label>
+                    <input type="text" name="cargo" id="cargo" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" required placeholder="Ex: Professor, Gerente" value="{{ funcionario.cargo if funcionario }}">
+                </div>
+                <div>
+                    <label for="email" class="block font-medium text-gray-700 mb-2">Email <span class="text-red-500">*</span> <span class="text-xs text-gray-500 font-normal">(Será o login)</span></label>
+                    <input type="email" name="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.email if funcionario }}">
+                    {% if not funcionario %}<p class="text-xs text-gray-500 mt-1">Senha inicial será '123456'</p>{% endif %}
+                </div>
+                <div>
+                    <label for="data_admissao" class="block font-medium text-gray-700 mb-2">Data de Admissão</label>
+                    <input type="date" name="data_admissao" id="data_admissao" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.data_admissao if funcionario }}">
+                </div>
+                <div>
+                    <label for="cref" class="block font-medium text-gray-700 mb-2">CREF (Opcional)</label>
+                    <input type="text" name="cref" id="cref" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.cref if funcionario }}">
+                </div>
+                <div>
+                    <label for="telefone" class="block font-medium text-gray-700 mb-2">Telefone</label>
+                    <input type="tel" name="telefone" id="telefone" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.telefone if funcionario }}">
+                </div>
+            </div>
         </div>
 
-        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 pt-4">Endereço</h2>
-        <div>
-            <label for="endereco" class="block font-medium text-gray-700">Endereço (Rua, Nº):</label>
-            <input type="text" name="endereco" id="endereco" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.endereco if funcionario }}">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="cidade" class="block font-medium text-gray-700">Cidade:</label>
-                <input type="text" name="cidade" id="cidade" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.cidade if funcionario }}">
+        <div class="space-y-6 pt-6">
+            <h2 class="text-xl font-bold text-dark border-b pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Endereço
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-3">
+                    <label for="endereco" class="block font-medium text-gray-700 mb-2">Endereço (Rua, Nº)</label>
+                    <input type="text" name="endereco" id="endereco" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.endereco if funcionario }}">
+                </div>
+                <div>
+                    <label for="cidade" class="block font-medium text-gray-700 mb-2">Cidade</label>
+                    <input type="text" name="cidade" id="cidade" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.cidade if funcionario }}">
+                </div>
+                <div>
+                    <label for="estado" class="block font-medium text-gray-700 mb-2">Estado (UF)</label>
+                    <input type="text" name="estado" id="estado" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition uppercase" maxlength="2" value="{{ funcionario.estado if funcionario }}">
+                </div>
+                <div>
+                    <label for="cep" class="block font-medium text-gray-700 mb-2">CEP</label>
+                    <input type="text" name="cep" id="cep" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-dark focus:border-transparent transition" value="{{ funcionario.cep if funcionario }}">
+                </div>
             </div>
-            <div>
-                <label for="estado" class="block font-medium text-gray-700">Estado (UF):</label>
-                <input type="text" name="estado" id="estado" class="w-full border border-gray-300 rounded-md p-2 mt-1" maxlength="2" value="{{ funcionario.estado if funcionario }}">
-            </div>
-        </div>
-        <div>
-            <label for="cep" class="block font-medium text-gray-700">CEP:</label>
-            <input type="text" name="cep" id="cep" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ funcionario.cep if funcionario }}">
         </div>
 
-        <div class="flex items-center space-x-4 pt-4">
-             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Alterações</button>
-            <a href="{{ url_for('lista_funcionarios') }}" class="text-gray-600 hover:underline">Cancelar</a>
+        <div class="flex items-center justify-end gap-4 pt-8 border-t border-gray-100">
+             <a href="{{ url_for('lista_funcionarios') }}" class="text-gray-600 font-bold hover:text-dark transition px-4 py-3">Cancelar</a>
+             <button type="submit" class="bg-dark hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition shadow-md hover:shadow-lg">Salvar</button>
         </div>
     </form>
 </div>
 {% endblock %}
-

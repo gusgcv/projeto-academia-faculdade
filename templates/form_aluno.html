@@ -3,74 +3,105 @@
 {% block title %}{% if aluno %}Editar Perfil de Aluno{% else %}Matricular Aluno{% endif %}{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto bg-white p-8 shadow-lg rounded-lg">
-    <!-- Título dinâmico -->
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">{% if aluno %}Editar Dados do Aluno{% else %}Dados do Aluno{% endif %}</h1>
+<div class="max-w-2xl mx-auto bg-white p-8 shadow-card rounded-2xl border border-gray-100">
+    <h1 class="text-3xl font-bold text-dark mb-8 flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+        {% if aluno %}Editar Dados do Aluno{% else %}Nova Matrícula{% endif %}
+    </h1>
     
-    <form method="post" enctype="multipart/form-data" class="space-y-4">
-        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Dados Pessoais</h2>
-        <div>
-            <label for="foto" class="block font-medium text-gray-700">Foto de Perfil (deixe em branco para manter a atual):</label>
-            <input type="file" name="foto" id="foto" class="w-full border border-gray-300 rounded-md p-2 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-        </div>
-        <div>
-            <label for="nome" class="block font-medium text-gray-700">Nome Completo:</label>
-            <!-- O atributo 'value' preenche o campo com o dado existente -->
-            <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ aluno.nome if aluno }}">
-        </div>
-        <div>
-            <label for="cpf" class="block font-medium text-gray-700">CPF:</label>
-            <input type="text" name="cpf" id="cpf" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ aluno.cpf if aluno }}">
-        </div>
-        <div>
-            <label for="data_nascimento" class="block font-medium text-gray-700">Data de Nascimento:</label>
-            <input type="date" name="data_nascimento" id="data_nascimento" class="w-full border border-gray-300 rounded-md p-2 mt-1" required value="{{ aluno.data_nascimento if aluno }}">
-        </div>
-        <div>
-            <label for="telefone" class="block font-medium text-gray-700">Telefone:</label>
-            <input type="tel" name="telefone" id="telefone" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.telefone if aluno }}">
-        </div>
-        <div>
-            <label for="email" class="block font-medium text-gray-700">Email:</label>
-            <input type="email" name="email" id="email" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.email if aluno }}">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        <div class="space-y-6">
+            <h2 class="text-xl font-bold text-dark border-b pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Dados Pessoais
+            </h2>
+            <div>
+                <label for="foto" class="block font-medium text-gray-700 mb-2">Foto de Perfil</label>
+                <input type="file" name="foto" id="foto" class="w-full border border-gray-300 rounded-lg p-2 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-primary-light file:text-primary hover:file:bg-gray-100 transition cursor-pointer">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="nome" class="block font-medium text-gray-700 mb-2">Nome Completo <span class="text-red-500">*</span></label>
+                    <input type="text" name="nome" id="nome" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" required value="{{ aluno.nome if aluno }}">
+                </div>
+                <div>
+                    <label for="cpf" class="block font-medium text-gray-700 mb-2">CPF <span class="text-red-500">*</span> <span class="text-xs text-gray-500 font-normal">(Será sua senha inicial)</span></label>
+                    <input type="text" name="cpf" id="cpf" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" required value="{{ aluno.cpf if aluno }}" placeholder="Somente números">
+                </div>
+                <div>
+                    <label for="data_nascimento" class="block font-medium text-gray-700 mb-2">Data de Nascimento <span class="text-red-500">*</span></label>
+                    <input type="date" name="data_nascimento" id="data_nascimento" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" required value="{{ aluno.data_nascimento if aluno }}">
+                </div>
+                <div>
+                    <label for="telefone" class="block font-medium text-gray-700 mb-2">Telefone</label>
+                    <input type="tel" name="telefone" id="telefone" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" value="{{ aluno.telefone if aluno }}">
+                </div>
+                <div>
+                    <label for="email" class="block font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" name="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" value="{{ aluno.email if aluno }}">
+                </div>
+            </div>
         </div>
         
-        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 pt-4">Endereço</h2>
-        <div>
-            <label for="endereco" class="block font-medium text-gray-700">Endereço (Rua, Nº):</label>
-            <input type="text" name="endereco" id="endereco" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.endereco if aluno }}">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="cidade" class="block font-medium text-gray-700">Cidade:</label>
-                <input type="text" name="cidade" id="cidade" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.cidade if aluno }}">
+        <div class="space-y-6 pt-6">
+            <h2 class="text-xl font-bold text-dark border-b pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Endereço
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-3">
+                    <label for="endereco" class="block font-medium text-gray-700 mb-2">Endereço (Rua, Nº)</label>
+                    <input type="text" name="endereco" id="endereco" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" value="{{ aluno.endereco if aluno }}">
+                </div>
+                <div>
+                    <label for="cidade" class="block font-medium text-gray-700 mb-2">Cidade</label>
+                    <input type="text" name="cidade" id="cidade" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" value="{{ aluno.cidade if aluno }}">
+                </div>
+                <div>
+                    <label for="estado" class="block font-medium text-gray-700 mb-2">Estado (UF)</label>
+                    <input type="text" name="estado" id="estado" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition uppercase" maxlength="2" value="{{ aluno.estado if aluno }}">
+                </div>
+                <div>
+                    <label for="cep" class="block font-medium text-gray-700 mb-2">CEP</label>
+                    <input type="text" name="cep" id="cep" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" value="{{ aluno.cep if aluno }}">
+                </div>
             </div>
-            <div>
-                <label for="estado" class="block font-medium text-gray-700">Estado (UF):</label>
-                <input type="text" name="estado" id="estado" class="w-full border border-gray-300 rounded-md p-2 mt-1" maxlength="2" value="{{ aluno.estado if aluno }}">
-            </div>
-        </div>
-        <div>
-            <label for="cep" class="block font-medium text-gray-700">CEP:</label>
-            <input type="text" name="cep" id="cep" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.cep if aluno }}">
         </div>
 
-        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 pt-4">Matrícula</h2>
-        <div>
-            <label for="data_matricula" class="block font-medium text-gray-700">Data da Matrícula:</label>
-            <input type="date" name="data_matricula" id="data_matricula" class="w-full border border-gray-300 rounded-md p-2 mt-1" value="{{ aluno.data_matricula if aluno }}">
+        {% if current_user.tipo_usuario == 'Funcionario' %}
+        <div class="space-y-6 pt-6">
+            <h2 class="text-xl font-bold text-dark border-b pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Dados da Matrícula
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="data_matricula" class="block font-medium text-gray-700 mb-2">Data da Matrícula</label>
+                    <input type="date" name="data_matricula" id="data_matricula" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" value="{{ aluno.data_matricula if aluno }}">
+                </div>
+                <div>
+                    <label for="status" class="block font-medium text-gray-700 mb-2">Status <span class="text-red-500">*</span></label>
+                    <select name="status" id="status" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition bg-white">
+                        <option value="Ativo" {% if aluno and aluno.status == 'Ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="Inativo" {% if aluno and aluno.status == 'Inativo' %}selected{% endif %}>Inativo</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="status" class="block font-medium text-gray-700">Status:</label>
-            <select name="status" id="status" class="w-full border border-gray-300 rounded-md p-2 mt-1">
-                <option value="Ativo" {% if aluno and aluno.status == 'Ativo' %}selected{% endif %}>Ativo</option>
-                <option value="Inativo" {% if aluno and aluno.status == 'Inativo' %}selected{% endif %}>Inativo</option>
-            </select>
-        </div>
+        {% endif %}
 
-        <div class="flex items-center space-x-4 pt-4">
-             <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Salvar Alterações</button>
-            <a href="{{ url_for('lista_alunos') }}" class="text-gray-600 hover:underline">Cancelar</a>
+        <div class="flex items-center justify-end gap-4 pt-8 border-t border-gray-100">
+             <a href="{{ url_for('lista_alunos') }}" class="text-gray-600 font-bold hover:text-dark transition px-4 py-3">Cancelar</a>
+             <button type="submit" class="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-8 rounded-lg transition shadow-md hover:shadow-lg">Salvar</button>
         </div>
     </form>
 </div>

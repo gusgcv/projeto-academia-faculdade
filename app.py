@@ -1,39 +1,44 @@
 import os
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from sqlalchemy import or_
 
 app = Flask(__name__)
-app.secret_key = 'senha_user'
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'academia.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'chave-super-secreta-do-projeto'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
-class Usuario(db.Model):
-    __tablename__ = 'usuarios'
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    senha_hash = db.Column(db.String(200), nullable=False)
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id.startswith('func_'):
+        id_real = int(user_id.split('_')[1])
+        return Funcionario.query.get(id_real)
+    elif user_id.startswith('aluno_'):
+        id_real = int(user_id.split('_')[1])
+        return Aluno.query.get(id_real)
+    return None
 
-    def set_senha(self, senha):
-        self.senha_hash = generate_password_hash(senha)
 
-    def verificar_senha(self, senha):
-        return check_password_hash(self.senha_hash, senha)
-
-class Aluno(db.Model):
+class Aluno(db.Model, UserMixin):
     __tablename__ = 'alunos'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     foto = db.Column(db.String(100), nullable=True, default='default.png')
     cpf = db.Column(db.String(14), unique=True, nullable=False)
+    senha_hash = db.Column(db.String(200), nullable=True)
     data_nascimento = db.Column(db.String(10), nullable=False)
     endereco = db.Column(db.String(200), nullable=True)
     cidade = db.Column(db.String(100), nullable=True)
@@ -42,15 +47,29 @@ class Aluno(db.Model):
     telefone = db.Column(db.String(20), nullable=True)
     email = db.Column(db.String(100), unique=True, nullable=True)
     data_matricula = db.Column(db.String(10), nullable=True)
-    status = db.Column(db.String(10), default= 'Ativo', nullable=False)
+    status = db.Column(db.String(10), default='Ativo', nullable=False)
 
     treinos = db.relationship('Treino', back_populates='aluno', lazy=True, cascade="all, delete-orphan")
 
-class Funcionario(db.Model):
+    def get_id(self):
+        return f"aluno_{self.id}"
+    
+    @property
+    def tipo_usuario(self):
+        return 'Aluno'
+
+    def set_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+
+    def check_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha)
+
+class Funcionario(db.Model, UserMixin):
     __tablename__ = 'funcionarios'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     foto = db.Column(db.String(100), nullable=True, default='default.png')
+    senha_hash = db.Column(db.String(200), nullable=True)
     cargo = db.Column(db.String(50), nullable=False)
     cref = db.Column(db.String(20), unique=True, nullable=True)
     endereco = db.Column(db.String(200), nullable=True)
@@ -63,15 +82,26 @@ class Funcionario(db.Model):
     
     treinos = db.relationship('Treino', back_populates='funcionario', lazy=True)
 
+    def get_id(self):
+        return f"func_{self.id}"
+
+    @property
+    def tipo_usuario(self):
+        return 'Funcionario'
+
+    def set_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+
+    def check_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha)
 
 class Exercicio(db.Model):
     __tablename__ = 'exercicios'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
-    grupo_muscular = db.Column(db.String(255), nullable=False)
+    grupo_muscular = db.Column(db.String(255), nullable=True) 
     descricao = db.Column(db.Text, nullable=True)
     itens_treino = db.relationship('ItemTreino', back_populates='exercicio', lazy=True)
-    
 
 class Treino(db.Model):
     __tablename__ = 'treinos'
@@ -88,28 +118,88 @@ class ItemTreino(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     treino_id = db.Column(db.Integer, db.ForeignKey('treinos.id'), nullable=False)
     exercicio_id = db.Column(db.Integer, db.ForeignKey('exercicios.id'), nullable=False)
-    series = db.Column(db.String(20), nullable=False)
+    series = db.Column(db.String(20), nullable=True)
     repeticoes = db.Column(db.String(20), nullable=True)
     descanso_seg = db.Column(db.Integer, nullable=True)
     observacoes = db.Column(db.Text, nullable=True)
-
     treino = db.relationship('Treino', back_populates='itens')
     exercicio = db.relationship('Exercicio', back_populates='itens_treino')
 
 
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        senha = request.form['senha']
+        
+        funcionario = Funcionario.query.filter_by(email=email).first()
+        if funcionario and funcionario.check_senha(senha):
+            login_user(funcionario)
+            return redirect(url_for('index'))
+            
+        aluno = Aluno.query.filter_by(email=email).first()
+        if aluno and aluno.check_senha(senha):
+            login_user(aluno)
+            return redirect(url_for('index'))
+            
+        flash('Email ou senha inválidos', 'danger')
+        
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+
+
 @app.route('/')
+@login_required
 def index():
+    if current_user.tipo_usuario == 'Aluno':
+        return redirect(url_for('perfil_aluno', aluno_id=current_user.id))
+    
+    # ATUALIZADO: Cálculo de estatísticas para o Dashboard
     total_alunos = Aluno.query.count()
     total_funcionarios = Funcionario.query.count()
-    return render_template('dashboard.html', total_alunos=total_alunos, total_funcionarios=total_funcionarios)
+    total_exercicios = Exercicio.query.count()
+    
+    alunos_ativos = Aluno.query.filter_by(status='Ativo').count()
+    alunos_inativos = Aluno.query.filter_by(status='Inativo').count()
+    
+    return render_template('dashboard.html', 
+                           total_alunos=total_alunos, 
+                           total_funcionarios=total_funcionarios,
+                           total_exercicios=total_exercicios,
+                           alunos_ativos=alunos_ativos,
+                           alunos_inativos=alunos_inativos)
 
 @app.route('/alunos')
+@login_required
 def lista_alunos():
-    alunos = Aluno.query.order_by(Aluno.nome).all()
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
+    
+    search = request.args.get('q')
+    if search:
+        alunos = Aluno.query.filter(
+            or_(Aluno.nome.contains(search), Aluno.cpf.contains(search))
+        ).order_by(Aluno.nome).all()
+    else:
+        alunos = Aluno.query.order_by(Aluno.nome).all()
+        
     return render_template('lista_alunos.html', alunos=alunos)
 
 @app.route('/aluno/perfil/<int:aluno_id>')
+@login_required
 def perfil_aluno(aluno_id):
+    if current_user.tipo_usuario == 'Aluno' and current_user.id != aluno_id:
+        return redirect(url_for('index'))
     aluno = Aluno.query.get_or_404(aluno_id)
     return render_template('perfil_aluno.html', aluno=aluno)
 
@@ -125,9 +215,9 @@ def novo_aluno():
 
         novo_aluno = Aluno(
             foto=foto_filename,
-            nome = request.form['nome'],
-            cpf = request.form['cpf'],
-            data_nascimento = request.form['data_nascimento'],
+            nome=request.form['nome'],
+            cpf=request.form['cpf'],
+            data_nascimento=request.form['data_nascimento'],
             endereco=request.form.get('endereco'),
             cidade=request.form.get('cidade'),
             estado=request.form.get('estado'),
@@ -137,13 +227,22 @@ def novo_aluno():
             data_matricula=request.form.get('data_matricula'),
             status=request.form['status']
         )
+        novo_aluno.set_senha(request.form['cpf'])
         db.session.add(novo_aluno)
         db.session.commit()
-        return redirect(url_for('lista_alunos'))
-    return render_template('form_aluno.html')
+        
+        if current_user.is_authenticated:
+            return redirect(url_for('lista_alunos'))
+        else:
+            return redirect(url_for('login'))
+    return render_template('form_aluno.html', aluno=None)
 
 @app.route('/aluno/editar/<int:aluno_id>', methods=['GET', 'POST'])
+@login_required
 def editar_aluno(aluno_id):
+    if current_user.tipo_usuario == 'Aluno' and current_user.id != aluno_id:
+        return redirect(url_for('index'))
+
     aluno = Aluno.query.get_or_404(aluno_id)
     if request.method == 'POST':
         aluno.nome = request.form['nome']
@@ -166,16 +265,18 @@ def editar_aluno(aluno_id):
                 aluno.foto = foto_filename
 
         db.session.commit()
-    
         return redirect(url_for('perfil_aluno', aluno_id=aluno.id))
     return render_template('form_aluno.html', aluno=aluno)
 
 @app.route('/aluno/excluir/<int:aluno_id>', methods=['POST'])
+@login_required
 def excluir_aluno(aluno_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     aluno_para_excluir = Aluno.query.get_or_404(aluno_id)
     if aluno_para_excluir.foto != 'default.png':
         try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], aluno.foto))
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], aluno_para_excluir.foto))
         except OSError:
             pass
     db.session.delete(aluno_para_excluir)
@@ -183,11 +284,23 @@ def excluir_aluno(aluno_id):
     return redirect(url_for('lista_alunos'))
 
 @app.route('/funcionarios')
+@login_required
 def lista_funcionarios():
-    funcionarios = Funcionario.query.order_by(Funcionario.nome).all()
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
+    
+    search = request.args.get('q')
+    if search:
+        funcionarios = Funcionario.query.filter(
+            or_(Funcionario.nome.contains(search), Funcionario.cargo.contains(search))
+        ).order_by(Funcionario.nome).all()
+    else:
+        funcionarios = Funcionario.query.order_by(Funcionario.nome).all()
+        
     return render_template('lista_funcionarios.html', funcionarios=funcionarios)
 
 @app.route('/funcionario/perfil/<int:funcionario_id>')
+@login_required
 def perfil_funcionario(funcionario_id):
     funcionario = Funcionario.query.get_or_404(funcionario_id)
     return render_template('perfil_funcionario.html', funcionario=funcionario)
@@ -204,9 +317,9 @@ def novo_funcionario():
 
         novo_funcionario = Funcionario(
             foto=foto_filename,
-            nome = request.form['nome'],
+            nome=request.form['nome'],
             cargo=request.form['cargo'],
-            cref = request.form.get('cref'),
+            cref=request.form.get('cref'),
             endereco=request.form.get('endereco'),
             cidade=request.form.get('cidade'),
             estado=request.form.get('estado'),
@@ -215,13 +328,17 @@ def novo_funcionario():
             data_admissao=request.form.get('data_admissao'),
             email=request.form.get('email')
         )
+        novo_funcionario.set_senha('123456')
         db.session.add(novo_funcionario)
         db.session.commit()
-        return redirect(url_for('lista_funcionarios'))
-    return render_template('form_funcionario.html')
+        return redirect(url_for('lista_funcionarios') if current_user.is_authenticated else url_for('login'))
+    return render_template('form_funcionario.html', funcionario=None)
 
 @app.route('/funcionario/editar/<int:funcionario_id>', methods=['GET', 'POST'])
+@login_required
 def editar_funcionario(funcionario_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     funcionario = Funcionario.query.get_or_404(funcionario_id)
     if request.method == 'POST':
         funcionario.nome = request.form['nome']
@@ -247,7 +364,10 @@ def editar_funcionario(funcionario_id):
     return render_template('form_funcionario.html', funcionario=funcionario)
 
 @app.route('/funcionario/excluir/<int:funcionario_id>', methods=['POST'])
+@login_required
 def excluir_funcionario(funcionario_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     funcionario_para_excluir = Funcionario.query.get_or_404(funcionario_id)
     if funcionario_para_excluir.foto != 'default.png':
         try:
@@ -259,16 +379,29 @@ def excluir_funcionario(funcionario_id):
     return redirect(url_for('lista_funcionarios'))
 
 @app.route('/exercicios')
+@login_required
 def lista_exercicios():
-    exercicios = Exercicio.query.order_by(Exercicio.grupo_muscular, Exercicio.nome).all()
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
+    
+    search = request.args.get('q')
+    if search:
+        exercicios = Exercicio.query.filter(
+            or_(Exercicio.nome.contains(search), Exercicio.grupo_muscular.contains(search))
+        ).order_by(Exercicio.grupo_muscular, Exercicio.nome).all()
+    else:
+        exercicios = Exercicio.query.order_by(Exercicio.grupo_muscular, Exercicio.nome).all()
+        
     return render_template('lista_exercicios.html', exercicios=exercicios)
 
 @app.route('/exercicio/novo', methods=['GET', 'POST'])
+@login_required
 def novo_exercicio():
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     if request.method == 'POST':
         grupos_selecionados = request.form.getlist('grupo_muscular')
         grupos_string = ",".join(grupos_selecionados)
-
         novo_ex = Exercicio(
             nome=request.form['nome'],
             grupo_muscular=grupos_string,
@@ -280,12 +413,14 @@ def novo_exercicio():
     return render_template('form_exercicio.html', exercicio=None)
 
 @app.route('/exercicio/editar/<int:exercicio_id>', methods=['GET', 'POST'])
+@login_required
 def editar_exercicio(exercicio_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     exercicio = Exercicio.query.get_or_404(exercicio_id)
     if request.method == 'POST':
         grupos_selecionados = request.form.getlist('grupo_muscular')
         grupos_string = ",".join(grupos_selecionados)
-
         exercicio.nome = request.form['nome']
         exercicio.grupo_muscular = grupos_string
         exercicio.descricao = request.form.get('descricao')
@@ -294,32 +429,45 @@ def editar_exercicio(exercicio_id):
     return render_template('form_exercicio.html', exercicio=exercicio)
 
 @app.route('/exercicio/excluir/<int:exercicio_id>', methods=['POST'])
+@login_required
 def excluir_exercicio(exercicio_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     exercicio_para_excluir = Exercicio.query.get_or_404(exercicio_id)
     db.session.delete(exercicio_para_excluir)
     db.session.commit()
     return redirect(url_for('lista_exercicios'))
 
 @app.route('/aluno/<int:aluno_id>/treinos')
+@login_required
 def gerenciar_treinos(aluno_id):
+    if current_user.tipo_usuario == 'Aluno' and current_user.id != aluno_id:
+        return redirect(url_for('index'))
     aluno = Aluno.query.get_or_404(aluno_id)
     exercicios_disponiveis = Exercicio.query.order_by(Exercicio.nome).all()
-    return render_template('gerenciar_treinos.html', aluno=aluno, exercicios_disponiveis=exercicios_disponiveis)
+    is_funcionario = (current_user.tipo_usuario == 'Funcionario')
+    return render_template('gerenciar_treinos.html', aluno=aluno, exercicios_disponiveis=exercicios_disponiveis, is_funcionario=is_funcionario)
 
 @app.route('/aluno/<int:aluno_id>/treino/novo', methods=['POST'])
+@login_required
 def novo_treino(aluno_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     nome_treino = request.form['nome_treino']
     novo_treino = Treino(
         nome=nome_treino,
         aluno_id=aluno_id,
-        funcionario_id=None 
+        funcionario_id=current_user.id 
     )
     db.session.add(novo_treino)
     db.session.commit()
     return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
 
 @app.route('/treino/<int:treino_id>/excluir', methods=['POST'])
+@login_required
 def excluir_treino(treino_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     treino = Treino.query.get_or_404(treino_id)
     aluno_id = treino.aluno_id
     db.session.delete(treino)
@@ -327,9 +475,11 @@ def excluir_treino(treino_id):
     return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
 
 @app.route('/treino/<int:treino_id>/adicionar_item', methods=['POST'])
+@login_required
 def adicionar_item_treino(treino_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     treino = Treino.query.get_or_404(treino_id)
-    
     novo_item = ItemTreino(
         treino_id=treino.id,
         exercicio_id=request.form['exercicio_id'],
@@ -343,72 +493,15 @@ def adicionar_item_treino(treino_id):
     return redirect(url_for('gerenciar_treinos', aluno_id=treino.aluno_id))
 
 @app.route('/item_treino/<int:item_id>/excluir', methods=['POST'])
+@login_required
 def excluir_item_treino(item_id):
+    if current_user.tipo_usuario != 'Funcionario':
+        return redirect(url_for('index'))
     item = ItemTreino.query.get_or_404(item_id)
     aluno_id = item.treino.aluno_id
     db.session.delete(item)
     db.session.commit()
     return redirect(url_for('gerenciar_treinos', aluno_id=aluno_id))
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        email = request.form.get('email')
-        senha = request.form.get('senha')
-        confirmar = request.form.get('confirmar')
-
-        if senha != confirmar:
-            flash('As senhas não coincidem.', 'danger')
-            return redirect(url_for('register'))
-
-        usuario_existente = Usuario.query.filter_by(email=email).first()
-        if usuario_existente:
-            flash('E-mail já cadastrado. Tente outro.', 'warning')
-            return redirect(url_for('register'))
-        
-        senha_hash = generate_password_hash(senha)
-        # ✅ Campo corrigido aqui
-        novo_usuario = Usuario(nome=nome, email=email, senha_hash=senha_hash)
-
-        db.session.add(novo_usuario)
-        db.session.commit()
-
-        flash('Cadastro realizado com sucesso! Faça login.', 'success')
-        return redirect(url_for('login'))
-    
-    return render_template('register.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        senha = request.form['senha']
-
-        usuario = Usuario.query.filter_by(email=email).first()
-
-        if usuario and usuario.verificar_senha(senha):
-            session['usuario_id'] = usuario.id
-            session['usuario_nome'] = usuario.nome
-            flash(f'Bem-vindo, {usuario.nome}!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('E-mail ou senha incorretos.', 'danger')
-            return redirect(url_for('login'))
-    return render_template('login.html')
-
-@app.route('/dashboard')
-def dashboard():
-    if 'usuario_id' not in session:
-        flash('Você precisa fazer login primeiro.', 'warning')
-        return redirect(url_for('login'))
-    return render_template('dashboard.html', nome=session['usuario_nome'])
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('Logout realizado com sucesso.', 'info')
-    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     with app.app_context():

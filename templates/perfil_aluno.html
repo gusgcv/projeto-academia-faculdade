@@ -3,30 +3,80 @@
 {% block title %}Perfil de {{ aluno.nome }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto bg-white p-8 shadow-lg rounded-lg">
-    <div class="flex flex-col md:flex-row items-center md:items-start">
-        <img src="{{ url_for('static', filename='uploads/' + aluno.foto) }}" alt="Foto de {{ aluno.nome }}" class="w-48 h-48 rounded-full object-cover border-4 border-gray-200 mb-6 md:mb-0 md:mr-8">
-        <div class="w-full">
-            <h1 class="text-4xl font-bold text-gray-800">{{ aluno.nome }}</h1>
-            <p class="text-lg text-gray-500 mb-4">
-                <span class="font-mono px-2 py-1 rounded-full text-sm {{ 'bg-green-200 text-green-800' if aluno.status == 'Ativo' else 'bg-red-200 text-red-800' }}">{{ aluno.status }}</span>
-            </p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-6 text-gray-700">
-                <div><strong>Email:</strong> {{ aluno.email or 'Não informado' }}</div>
-                <div><strong>Telefone:</strong> {{ aluno.telefone or 'Não informado' }}</div>
-                <div><strong>CPF:</strong> {{ aluno.cpf }}</div>
-                <div><strong>Data de Nascimento:</strong> {{ aluno.data_nascimento }}</div>
-                <div><strong>Data da Matrícula:</strong> {{ aluno.data_matricula or 'Não informado' }}</div>
-                <div class="col-span-2"><strong>Endereço:</strong> {{ aluno.endereco or 'Não informado' }}, {{ aluno.cidade or '' }} - {{ aluno.estado or '' }} (CEP: {{ aluno.cep or 'N/A' }})</div>
+<div class="max-w-5xl mx-auto">
+    <div class="bg-white shadow-card rounded-2xl overflow-hidden mb-8">
+        <div class="h-48 bg-gradient-to-r from-primary to-primary-hover relative"></div>
+        <div class="px-8 pb-8 flex flex-col md:flex-row items-center md:items-end -mt-24 relative">
+            <img src="{{ url_for('static', filename='uploads/' + aluno.foto) }}" alt="Foto de {{ aluno.nome }}" class="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg bg-white">
+            <div class="mt-6 md:mt-0 md:ml-8 text-center md:text-left flex-grow">
+                <h1 class="text-4xl font-bold text-dark">{{ aluno.nome }}</h1>
+                <div class="flex items-center justify-center md:justify-start gap-4 mt-3">
+                    <span class="text-sm font-bold uppercase px-3 py-1 rounded-full {{ 'bg-green-100 text-green-700' if aluno.status == 'Ativo' else 'bg-red-100 text-red-700' }}">{{ aluno.status }}</span>
+                    <span class="text-sm font-medium text-gray-500">Matrícula desde: {{ aluno.data_matricula or 'N/A' }}</span>
+                </div>
             </div>
+            <div class="mt-6 md:mt-0 flex gap-3">
+                <a href="{{ url_for('editar_aluno', aluno_id=aluno.id) }}" class="bg-white border border-gray-300 text-dark font-bold py-3 px-6 rounded-lg hover:bg-gray-50 transition shadow-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar Perfil
+                </a>
+                <a href="{{ url_for('gerenciar_treinos', aluno_id=aluno.id) }}" class="bg-primary text-white font-bold py-3 px-6 rounded-lg hover:bg-primary-hover transition shadow-md hover:shadow-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    {% if current_user.tipo_usuario == 'Funcionario' %}Gerenciar Treinos{% else %}Meus Treinos{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
 
-            <div class="mt-8 border-t pt-4 flex items-center space-x-4">
-                 <a href="{{ url_for('editar_aluno', aluno_id=aluno.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Editar Perfil</a>
-                 <!-- NOVO BOTÃO PARA GERENCIAR TREINOS -->
-                 <a href="{{ url_for('gerenciar_treinos', aluno_id=aluno.id) }}" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">Gerenciar Treinos</a>
-                 <a href="{{ url_for('lista_alunos') }}" class="text-gray-600 hover:underline">Voltar para a lista</a>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-2 bg-white p-8 shadow-card rounded-2xl border border-gray-100">
+            <h2 class="text-xl font-bold text-dark mb-6 flex items-center gap-2 pb-4 border-b border-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Dados Pessoais
+            </h2>
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-sm">
+                <div>
+                    <dt class="font-medium text-gray-500 mb-1">CPF</dt>
+                    <dd class="text-dark font-semibold text-base">{{ aluno.cpf }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500 mb-1">Data de Nascimento</dt>
+                    <dd class="text-dark font-semibold text-base">{{ aluno.data_nascimento }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500 mb-1">Email</dt>
+                    <dd class="text-dark font-semibold text-base break-all">{{ aluno.email or 'Não informado' }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500 mb-1">Telefone</dt>
+                    <dd class="text-dark font-semibold text-base">{{ aluno.telefone or 'Não informado' }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white p-8 shadow-card rounded-2xl border border-gray-100 h-fit sticky top-24">
+            <h2 class="text-xl font-bold text-dark mb-6 flex items-center gap-2 pb-4 border-b border-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Endereço
+            </h2>
+            <address class="not-italic text-gray-600 font-medium leading-relaxed">
+                {% if aluno.endereco %}
+                    {{ aluno.endereco }}<br>
+                    {{ aluno.cidade }} - {{ aluno.estado }}<br>
+                    CEP: {{ aluno.cep or 'N/A' }}
+                {% else %}
+                    Endereço não informado.
+                {% endif %}
+            </address>
         </div>
     </div>
 </div>

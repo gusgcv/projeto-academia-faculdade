@@ -2,36 +2,113 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Academia{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        
+                        primary: {
+                            DEFAULT: '#7F5AF0', 
+                            hover: '#6B46C1', 
+                            light: '#F2EFFF' 
+                        },
+                        dark: {
+                            DEFAULT: '#2D2D2D', 
+                            light: '#4A4A4A' 
+                        },
+                        gray: {
+                            50: '#F9FAFB',
+                            100: '#F4F4F5', 
+                            200: '#E4E4E7',
+                            300: '#D4D4D8',
+                            400: '#A1A1AA',
+                            500: '#71717A',
+                            600: '#52525B',
+                            700: '#3F3F46',
+                            800: '#27272A',
+                            900: '#18181B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-gray-800 text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
+<body class="bg-gray-100 text-dark font-sans">
+    {% if current_user.is_authenticated %}
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                
                 <div class="flex items-center">
-                    <a href="{{ url_for('index') }}" class="font-bold text-xl">AcademiaSys</a>
+                    <a href="{{ url_for('index') }}" class="flex items-center gap-3 hover:opacity-90 transition">
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="h-10 w-auto object-contain">
+                        <span class="font-bold text-xl tracking-tight text-dark">AcademiaSys</span>
+                    </a>
                 </div>
 
-                <div class="flex items-center space-x-4">
-                    {% if session.get('usuario_id') %}
-                        <!-- Mostra apenas se o usuário estiver logado -->
-                        <a href="{{ url_for('index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Dashboard</a>
-                        <a href="{{ url_for('lista_alunos') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Alunos</a>
-                        <a href="{{ url_for('lista_funcionarios') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Funcionários</a>
-                        <a href="{{ url_for('lista_exercicios') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Exercícios</a>
-                        <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded-md text-sm font-medium bg-red-600 hover:bg-red-700">Sair</a>
+                <div class="flex items-center space-x-1">
+                    {% if current_user.tipo_usuario == 'Funcionario' %}
+                        <a href="{{ url_for('index') }}" class="px-3 py-2 rounded-md text-sm font-medium text-dark-light hover:text-primary hover:bg-primary-light transition">Dashboard</a>
+                        <a href="{{ url_for('lista_alunos') }}" class="px-3 py-2 rounded-md text-sm font-medium text-dark-light hover:text-primary hover:bg-primary-light transition">Alunos</a>
+                        <a href="{{ url_for('lista_funcionarios') }}" class="px-3 py-2 rounded-md text-sm font-medium text-dark-light hover:text-primary hover:bg-primary-light transition">Funcionários</a>
+                        <a href="{{ url_for('lista_exercicios') }}" class="px-3 py-2 rounded-md text-sm font-medium text-dark-light hover:text-primary hover:bg-primary-light transition">Exercícios</a>
                     {% else %}
-                        <!-- Mostra apenas se o usuário NÃO estiver logado -->
-                        <a href="{{ url_for('login') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Login</a>
-                        <a href="{{ url_for('register') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Registrar</a>
+                        <a href="{{ url_for('perfil_aluno', aluno_id=current_user.id) }}" class="px-3 py-2 rounded-md text-sm font-medium text-dark-light hover:text-primary hover:bg-primary-light transition">Meu Perfil</a>
+                        <a href="{{ url_for('gerenciar_treinos', aluno_id=current_user.id) }}" class="px-3 py-2 rounded-md text-sm font-medium text-dark-light hover:text-primary hover:bg-primary-light transition">Meus Treinos</a>
                     {% endif %}
+                    
+                    <div class="h-6 w-px bg-gray-300 mx-3"></div>
+                    
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-dark hidden md:block">{{ current_user.nome.split()[0] }}</span>
+                        <a href="{{ url_for('logout') }}" class="group flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-dark-light hover:bg-red-500 hover:text-white transition" title="Sair">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
+    {% endif %}
 
-    <main class="p-10">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-lg shadow-sm border-l-4 flex items-center font-medium
+                        {% if category == 'success' %} bg-green-50 border-green-500 text-green-700
+                        {% elif category == 'danger' %} bg-red-50 border-red-500 text-red-700
+                        {% elif category == 'warning' %} bg-yellow-50 border-yellow-500 text-yellow-700
+                        {% else %} bg-primary-light border-primary text-primary {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
 </body>
